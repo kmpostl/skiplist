@@ -1,0 +1,59 @@
+	private void deleteWrapped(AnyType data)
+	{
+		Node<AnyType> current = this.head;
+		//Stack<Node<AnyType>> breadCrumbs = new Stack<Node<AnyType>>();
+		HashMap<Integer, Node<AnyType>> breadCrumbs = new HashMap<Integer, Node<AnyType>>();
+		int level = this.height - defaultHeight;
+		boolean found = false;
+		Node<AnyType> next = current.next(level);
+
+		while (!found)
+		{
+			next = current.next(level);
+
+			//System.out.println("Next is " + next + "\t\tlevel is " + level);
+
+			if (level <= 0 && next == null)
+				return;
+			if (level == 0 && next.value().compareTo(data) == 0)	// Found
+			{
+				// Next is now value
+				found = true;
+				breadCrumbs.put(level + 1, current);
+				break;
+			}
+			else
+			{
+				// if (level < 0)
+				// {
+				// 	System.out.println("SOMEGHTING WENT WRONG");
+				// 	return;
+				// }
+				if (next == null || next.value().compareTo(data) >= 0)	// If they're the same or next is greater move down
+				{
+					// Disregard height since thats solved below
+					breadCrumbs.put(level + 1, current);
+					//System.out.println(level);
+					level--;
+				}
+				else
+				{
+					current = current.next(level);
+				}
+			}
+		}
+
+		// Breadcrumb fixing and actually removing node by getting rid of references
+		// Depending on height of deleted node we pop only the most recent heights as we went down
+		System.out.println("deleting node: " + data);
+		for (int i = 0; i < next.height(); i++)
+		{
+			Node<AnyType> fixMe = breadCrumbs.get(i + 1);
+			// if (fixMe.value() != null)
+			// 	System.out.println("Level change: " + i + "\tFor node: " + fixMe.value());
+			// else
+			// 	System.out.println("Level change: " + i + "\tNODE IS NULL " + fixMe);
+			fixMe.setNext(i, next.next(i));
+		}
+		this.size--;
+	}

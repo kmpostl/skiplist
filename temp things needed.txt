@@ -1,0 +1,145 @@
+If the node is null should value() return null?
+
+If deleting and height changes should we trim everything at the old height. Instead of trimming and running something like maybeShrink()?
+	when deleting continue going down even if next node is the one to delete since if theres dups we delete leftmost
+	then 
+	CAN DELETE CALL GET TO FIND THE HEIGHT?? IT WOULD BE O(2LOGN) INSTEAD OF O(LOGN) BUT LAST TIME THAT WAS O(2N) INSTEAD OF O(N) AND IT FAILED THE TEST
+
+head		30				null
+head	10	30		40		null
+head	10	30	40	40		null
+head	10	30	40	40	50	null
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	public static void main(String[] args)
+	{
+
+		SkipList<Integer> skiplist = new SkipList<Integer>(1);
+		//skiplist.insert(224376717, 1);
+		//skiplist.insert(294471693, 1);
+		skiplist.insert(435305712, 3);
+		skiplist.insert(609528871, 3);
+		skiplist.insert(905178381, 2);
+
+		System.out.println(skiplist.head.next(2).value());
+		System.out.println(skiplist.head.next(2).next(2).value());
+
+		// Growth is still failing
+
+	}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+		// SkipList<Integer> skiplist = new SkipList<Integer>();
+		//
+		// long totalTime = 0, start, end, total;
+		//
+		// start = System.nanoTime();
+		// // Insert lots of elements. This will take a while.
+		// for (int i = 0; i < 1000000; i++)
+		// 	skiplist.insert(RNG.getUniqueRandomInteger());
+		// end = System.nanoTime();
+		// totalTime = (end - start);
+		// System.out.println("Total time to insert " + totalTime);
+		//
+		// // Time how long it takes to search for an integer this is in the skip list.
+		// totalTime = 0;
+		// int used = RNG.getRandomUsedInteger();
+		// start = System.nanoTime();
+		// boolean success = skiplist.contains(used);
+		// end = System.nanoTime();
+		// totalTime += (end - start);
+		//
+		// System.out.println("Total time for node that exists " + totalTime + "\t\t Value: " + used + "\t\tSuccess?: "+ success);
+		// // Time how long it takes to search for an integer this is not in the skip list.
+		// int unused = RNG.getRandomUnusedInteger();
+		// start = System.nanoTime();
+		// success &= !skiplist.contains(unused);
+		// end = System.nanoTime();
+		// totalTime += (end - start);
+		// System.out.println("Total time for node that doesn't exists " + totalTime + "\t\t Value: " + unused + "\t\tSuccess?: "+ success);
+		//
+		// System.out.println((success && totalTime < 500000) ? "Hooray!" : "fail whale :(");
+
+		//System.out.println("Max height of " + s.size() + " is equal to " + getMaxHeight(s.size()));
+		//System.out.println("Max height of " + 3 + " is equal to " + getMaxHeight(3));
+
+	public Node<AnyType> get(AnyType data)
+	{
+		int level = this.height - defaultHeight;
+		boolean found = false;
+		Node<AnyType> current = this.head;
+		Node<AnyType> next;
+
+		while (!found)
+		{
+			next = current.next(level);
+			// Check if level is 0 and next is null or greater than data searched. Then its not there
+			if (level == 0 && (next == null || next.value().compareTo(data) > 0))
+				return null;
+			if (next.value().compareTo(data) == 0)
+				found = true;
+			else
+			{
+				if (next.value().compareTo(data) < 0)
+				{
+					current = current.next(level);
+					next = current.next(level);
+				}
+				else
+				{
+					level -= 1;
+					next = current.next(level);
+				}
+			}
+		}
+		return next;
+	}
+
+
+Second attempt at recursion results in stack overflow
+	public void insert(AnyType data, int height)
+	{
+		// Just in case someone passes a node in with a height greater than the head node
+		if (height > head.height())
+		{
+			this.height++;
+			head.grow();
+		}
+
+		Node<AnyType> insertMe = new Node<AnyType>(data, height);
+		// Insert the new node
+		insertWrapped(this.head, insertMe, this.height - 1);
+
+		// Grow skip list if it needs it
+		if (getMaxHeight(this.size) > head.height())
+		{
+			this.height++;
+			head.grow();
+			growSkipList();
+		}
+	}
+
+	// Actual insertion method
+	private void insertWrapped(Node<AnyType> current, Node<AnyType> insertMe, int level)
+	{
+		Node<AnyType> next = current.next(level);
+		if (next == null || next.value().compareTo(insertMe.value()) >= 0)			// move down
+		{
+			if (level < insertMe.height())				// breadCrumb
+			{
+				insertWrapped(current, insertMe, level - 1);
+				insertMe.setNext(level, current.next(level));
+				current.setNext(level, insertMe);
+				return;
+			}
+			insertWrapped(current, insertMe, level - 1);
+			return;
+		}
+		if (next.value().compareTo(insertMe.value()) < 0)
+		{												// Go right
+			insertWrapped(next, insertMe, level);
+			return;
+		}
+	}
